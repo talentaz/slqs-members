@@ -144,7 +144,7 @@ function slqs_registration_form() {
             <input type="text" class="form-control" required  name="current_position"/>
         </div>
 
-        <h5>Employment Information <br> Name and Relationship to Applicant</h5>
+        <h5>Emergency Contact <br> Name and Relationship to Applicant</h5>
         <div class="">
             <label class="form-label">Name *</label>
             <input type="text" class="form-control" required name="emergency_contact_name"/>
