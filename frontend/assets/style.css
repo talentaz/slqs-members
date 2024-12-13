@@ -1,0 +1,16 @@
+input {
+    width: 100% !important;
+    margin: 0 !important;
+}
+.parsley-error {
+    border-color: #f46a6a !important;
+}
+.parsley-errors-list>li {
+    font-size: 12px;
+    list-style: none;
+    color: #f46a6a;
+    margin-top: 5px;
+}
+.parsley-errors-list {
+    margin: 0 !important;
+}
