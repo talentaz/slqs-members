@@ -255,6 +255,24 @@ function slqs_handle_registration() {
 
         $membership_number = generate_membership_number($joining_date);
         $password = wp_hash_password('12345');
+        
+        // Send verification email to referee
+        $verification_link = site_url('/verify-referee?email=' . urlencode($email));
+       
+        $subject = 'Welcome to SLQS-UAE – Your Membership Registration Update';
+        $member_email_content =  file_get_contents( __DIR__ . '/mail/member.txt');
+        $message = str_replace('[Member\'s Name]', $first_name.' '.$last_name, $member_email_content);
+        
+        if (wp_mail($email, $subject, $message)) {
+            //return true; // Email sent successfully
+        } else {
+            // Capture the last error message from PHPMailer
+            global $phpmailer;
+            $error_message = $phpmailer->ErrorInfo;
+        
+            // Send a JSON error response with the error message
+            wp_send_json_error('Cannot send email: ' . $error_message);
+        }
 
         // Step 4: Insert user data into the users table
         $user_data = array(
@@ -279,7 +297,8 @@ function slqs_handle_registration() {
         //     echo "Error uploading file: " . $upload['error'];
         //     return;
         // }
-
+        
+         
         // Insert member data into slqs_members table
         $member_inserted = $wpdb->insert(
                                 "{$wpdb->prefix}slqs_members",
@@ -330,9 +349,7 @@ function slqs_handle_registration() {
                 'member_type_id' => 1
                  )
         );
-        // Send verification email to referee
-        $verification_link = site_url('/verify-referee?email=' . urlencode($email));
-        wp_mail($email, 'Verify Member Details', "Please verify the member details by clicking this link: $verification_link");
+     
        
         wp_send_json_success(array('message' => 'Thank you!', 'redirect' => home_url('/success')));
     } else {

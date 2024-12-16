@@ -246,3 +246,15 @@ function handle_update_member() {
         wp_die('Failed to update member data. Last query: ' . esc_html($wpdb->last_query));
     }
 }
+
+add_action('phpmailer_init', 'configure_smtp');
+
+function configure_smtp($phpmailer) {
+    $phpmailer->isSMTP(); // Set mailer to use SMTP
+    $phpmailer->Host = 'mail.slqsuae.org'; // Specify main and backup SMTP servers
+    $phpmailer->SMTPAuth = true; // Enable SMTP authentication
+    $phpmailer->Username = 'info@slqsuae.org'; // SMTP username
+    $phpmailer->Password = '*eAmmhcnvbb0'; // SMTP password
+    $phpmailer->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
+    $phpmailer->Port = 465; // TCP port to connect to
+}
