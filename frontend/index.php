@@ -257,6 +257,8 @@ function slqs_handle_registration() {
         if (!$existing_member_no) {
             wp_send_json_error('Membership number is no exist. Please Choose correct membership number');
         } else {
+            $referee_email = $existing_member_no->user_email;
+
             $subject = 'Reference Confirmation for Membership Registration – SLQS-UAE of '.$first_name.' '.$last_name;
             $member_email_content =  file_get_contents( __DIR__ . '/mail/referee.txt');
             $member_details = "
@@ -365,7 +367,7 @@ function slqs_handle_registration() {
             $message = str_replace('[member details]', $member_details, $message);
             $message = str_replace('[Confirmation Link]', $confirmation_link, $message);
 
-            if (wp_mail('membership@slqsuae.org', $subject, $message)) {
+            if (wp_mail($referee_email, $subject, $message)) {
                 //return true; // Email sent successfully
             } else {
                 // Capture the last error message from PHPMailer
