@@ -51,29 +51,62 @@ jQuery(document).ready(function($) {
         });
 
         // list page
-        $('#pagination').on('click', '.page-item:not(.disabled)', function() {
-            var page = $(this).data('page');
+        $('#memberList').on('click', '.page-item', function() {
+            $('#spinner-container').show();
+            // Check if the clicked item is a dot
+            if ($(this).hasClass('dots')) {
+                // If it's a dot, load the first page
+                var page = 1; // Set page to 1 for dots
+                console.log('Requested page:', page); // Log the requested page number
     
-            // Disable all pagination buttons
-            $('#pagination .page-item').addClass('disabled');
+                // Disable all pagination buttons
+                $('#pagination .page-item').addClass('disabled');
     
-            // AJAX request to load members
-            $.ajax({
-                type: 'POST',
-                url: myAjax.ajaxurl, // Use the localized AJAX URL
-                data: {
-                    action: 'load_members',
-                    page: page
-                },
-                success: function(response) {
-                    $('#memberList').html(response); // Update the member list
-                    $('#pagination .page-item').removeClass('disabled'); // Re-enable pagination buttons
-                },
-                error: function() {
-                    alert('An error occurred while loading members.');
-                    $('#pagination .page-item').removeClass('disabled'); // Re-enable pagination buttons
+                // AJAX request to load members
+                $.ajax({
+                    type: 'POST',
+                    url: myAjax.ajaxurl, // Use the localized AJAX URL
+                    data: {
+                        action: 'load_members',
+                        page: page
+                    },
+                    success: function(response) {
+                        $('#memberList').html(response); // Update the member list
+                        $('#pagination .page-item').removeClass('disabled'); // Re-enable pagination buttons
+                    },
+                    error: function() {
+                        alert('An error occurred while loading members.');
+                        $('#pagination .page-item').removeClass('disabled'); // Re-enable pagination buttons
+                    }
+                });
+            } else {
+                // Handle clicks on other pagination items
+                var page = $(this).data('page');
+                if (page !== undefined) {
+                    console.log('Requested page:', page); // Log the requested page number
+    
+                    // Disable all pagination buttons
+                    $('#pagination .page-item').addClass('disabled');
+    
+                    // AJAX request to load members
+                    $.ajax({
+                        type: 'POST',
+                        url: myAjax.ajaxurl, // Use the localized AJAX URL
+                        data: {
+                            action: 'load_members',
+                            page: page
+                        },
+                        success: function(response) {
+                            $('#memberList').html(response); // Update the member list
+                            $('#pagination .page-item').removeClass('disabled'); // Re-enable pagination buttons
+                        },
+                        error: function() {
+                            alert('An error occurred while loading members.');
+                            $('#pagination .page-item').removeClass('disabled'); // Re-enable pagination buttons
+                        }
+                    });
                 }
-            });
+            }
         });
 
     });

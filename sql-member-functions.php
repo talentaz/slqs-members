@@ -253,8 +253,16 @@ function configure_smtp($phpmailer) {
     $phpmailer->isSMTP(); // Set mailer to use SMTP
     $phpmailer->Host = 'mail.slqsuae.org'; // Specify main and backup SMTP servers
     $phpmailer->SMTPAuth = true; // Enable SMTP authentication
-    $phpmailer->Username = 'info@slqsuae.org'; // SMTP username
-    $phpmailer->Password = '*eAmmhcnvbb0'; // SMTP password
+
+    // Determine which email to use and set the corresponding credentials
+    if ($phpmailer->getToAddresses()[0][0] === 'member@slqsuae.org') {
+        $phpmailer->Username = 'membership@slqsuae.org'; // SMTP username for member email
+        $phpmailer->Password = 'a]TWY*Z%(P5)'; // SMTP password for member email
+    } else {
+        $phpmailer->Username = 'info@slqsuae.org'; // SMTP username for info email
+        $phpmailer->Password = '*eAmmhcnvbb0'; // SMTP password for info email
+    }
+
     $phpmailer->SMTPSecure = 'ssl'; // Enable TLS encryption, `ssl` also accepted
     $phpmailer->Port = 465; // TCP port to connect to
 }

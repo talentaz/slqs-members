@@ -16,6 +16,14 @@ input {
 }
 
 /* list page */
+.search-box {
+    display: flex;
+    justify-content: end;
+    margin-bottom: 20px;
+}
+.search-box input {
+    width: 30% !important;
+}
 .list-col {
     border-color: rgba(225, 225, 225, .25);
     background: #67615c;
@@ -62,3 +70,35 @@ input {
     text-align: center;
     line-height: 32px;
 }
+
+/* spinner */
+@keyframes spinner-border {
+    to {
+      transform: rotate(360deg); /* rtl:ignore */
+    }
+  }
+  #spinner-container {
+    position: fixed; /* Fixed positioning to keep it in view */
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust for the spinner's size */
+    z-index: 9999; /* Ensure it appears above other content */
+    display: none; /* Initially hidden */
+}  
+.spinner-border {
+    display: inline-block;
+    width: 2rem; /* Replace with your desired width */
+    height: 2rem; /* Replace with your desired height */
+    vertical-align: middle; /* Replace with your desired vertical alignment */
+    border: 0.25em solid currentColor; /* Replace with your desired border width */
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite; /* Replace with your desired animation speed */
+}
+
+/* responsive */
+@media only screen and (max-width: 768px) {
+    .search-box input {
+        width: 100% !important;
+    }
+  }

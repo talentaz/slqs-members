@@ -8,6 +8,9 @@
 function slqs_list() {
     ob_start();
     ?>
+    <div class="search-box">
+        <input type="text" placeholder="search value 3 text above...">
+    </div>
     <div id="memberList" class="row">
         <?php slqs_display_members(1); // Display the first page by default ?>
     </div>
@@ -33,14 +36,34 @@ function slqs_list() {
 }
 
 function slqs_display_members($page) {
-    // Example data
+    global $wpdb;
     $members_per_page = 12;
-    $total_members = 60; // Example total members
+    $total_members = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}slqs_members");
     $total_pages = ceil($total_members / $members_per_page);
     $start = ($page - 1) * $members_per_page;
+    
+    $members = $wpdb->get_results("
+        SELECT 
+            DISTINCT m.*, 
+            u.user_login, 
+            u.user_email,
+            GROUP_CONCAT(t.type_name) AS type_names
+        FROM 
+            {$wpdb->prefix}slqs_members AS m
+        LEFT JOIN 
+            {$wpdb->prefix}users AS u ON m.user_id = u.ID
+        LEFT JOIN 
+            {$wpdb->prefix}slqs_member_group AS g ON m.id = g.member_id
+        LEFT JOIN 
+            {$wpdb->prefix}slqs_member_type AS t ON g.member_type_id = t.id
+        GROUP BY 
+            m.id
+        LIMIT $start, $members_per_page
+    ");
 
     // Display members
-    for ($i = $start; $i < min($start + $members_per_page, $total_members); $i++) {
+    foreach ($members as $index => $member) {
+        $profile_photo = !empty($member->profile_photo) ? esc_url($member->profile_photo) : plugins_url('assets/images/avatar.png', __FILE__);
         ?>
         <div class="col-xl-4 col-sm-6">
             <div class="list-col">
@@ -48,18 +71,24 @@ function slqs_display_members($page) {
                     <img src="http://localhost/wordpress/wp-content/uploads/2023/09/FB-2.jpeg" alt="">
                 </div>
                 <div class="avatar-img">
-                    <img src="http://localhost/wordpress/wp-content/uploads/2023/09/0528382584-150x150.jpeg" alt="">
+                    <img src="<?php echo $profile_photo; ?>" alt="" >
                 </div>
                 <div class="member-name">
-                    <a href="#">Member <?php echo $i + 1; ?></a>
+                    <a href="#"><?php echo esc_html($member->first_name.' '.$member->last_name); ?></a>
                 </div>
             </div>
         </div>
         <?php
     }
-
-    // Generate pagination
-    echo '<div class="row">';
+?>
+    <div id="spinner-container">
+        <div class="spinner-border text-primary m-1" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <?php
+    // Generate pagination 
+    echo '<div class="container">';
     echo '<div class="col-lg-12">';
     echo '<ul class="pagination pagination-rounded justify-content-center mt-3 mb-4 pb-1" id="pagination">';
 
@@ -74,12 +103,49 @@ function slqs_display_members($page) {
               </li>';
     }
 
-    // Page number links
-    for ($i = 1; $i <= $total_pages; $i++) {
-        if ($i == $page) {
-            echo '<li class="page-item active" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+    // Page number links with dots
+    if ($total_pages > 5) {
+        if ($page < 4) {
+            for ($i = 1; $i <= 5; $i++) {
+                if ($i == $page) {
+                    echo '<li class="page-item active" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+                } else {
+                    echo '<li class="page-item" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+                }
+            }
+            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            echo '<li class="page-item" data-page="' . $total_pages . '"><a href="javascript:void(0);" class="page-link">' . $total_pages . '</a></li>';
+        } elseif ($page > $total_pages - 3) {
+            echo '<li class="page-item" data-page="1"><a href="javascript:void(0);" class="page-link">1</a></li>';
+            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            for ($i = $total_pages - 4; $i <= $total_pages; $i++) {
+                if ($i == $page) {
+                    echo '<li class="page-item active" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+                } else {
+                    echo '<li class="page-item" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+                }
+            }
         } else {
-            echo '<li class="page-item" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+            echo '<li class="page-item" data-page="1"><a href="javascript:void(0);" class="page-link">1</a></li>';
+            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            for ($i = $page - 1; $i <= $page + 1; $i++) {
+                if ($i == $page) {
+                    echo '<li class="page-item active" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+                } else {
+                    echo '<li class="page-item" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+                }
+            }
+            echo '<li class="page-item disabled"><span class="page-link">...</span></li>';
+            echo '<li class="page-item" data-page="' . $total_pages . '"><a href="javascript:void(0);" class="page-link">' . $total_pages . '</a></li>';
+        }
+    } else {
+        // If total pages are 5 or less, show all page numbers
+        for ($i = 1; $i <= $total_pages; $i++) {
+            if ($i == $page) {
+                echo '<li class="page-item active" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+            } else {
+                echo '<li class="page-item" data-page="' . $i . '"><a href="javascript:void(0);" class="page-link">' . $i . '</a></li>';
+            }
         }
     }
 

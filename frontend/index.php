@@ -253,11 +253,135 @@ function slqs_handle_registration() {
             wp_send_json_error('Email already exists. Please use a different email.');
         }
 
+        $existing_member_no = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}users WHERE user_login = %s", $referee_membership_no));
+        if (!$existing_member_no) {
+            wp_send_json_error('Membership number is no exist. Please Choose correct membership number');
+        } else {
+            $subject = 'Reference Confirmation for Membership Registration – SLQS-UAE of '.$first_name.' '.$last_name;
+            $member_email_content =  file_get_contents( __DIR__ . '/mail/referee.txt');
+            $member_details = "
+                <table style='border-collapse: collapse; width: 100%;'>
+                    <tr>
+                        <th style='border: 1px solid #dddddd; text-align: left; padding: 8px;'>Detail</th>
+                        <th style='border: 1px solid #dddddd; text-align: left; padding: 8px;'>Information</th>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($first_name . ' ' . $last_name) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Birth Date</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($date_of_birth) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Current Address</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($current_address) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number * (Primary)</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($mobile_primary) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number (Alternative)</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($mobile_alternative) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>E-mail Address * (Primary)</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($email) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>E-mail Address (Alternative)</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($email_alternative) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Joining Date for the 1st Job in UAE</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($joining_date) . "</td>
+                    </tr>
+                    <tr>
+                        <td colspan='2' style='border: 1px solid #dddddd; padding: 8px;'>Employment Information</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($current_employer) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Employer Address</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($employer_address) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Company Phone Number</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($company_phone) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Company E-mail Address</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($company_email) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Current Position</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($current_position) . "</td>
+                    </tr>
+                    <tr>
+                        <td colspan='2' style='border: 1px solid #dddddd; padding: 8px;'>Emergency Contact Name and Relationship to Applicant</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_name) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Relationship to Applicant</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_relationship) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Address </td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_address) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_mobile) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>E-mail</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_email) . "</td>
+                    </tr>
+                    <tr>
+                        <td colspan='2' style='border: 1px solid #dddddd; padding: 8px;'>Referee</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name of SLQS Member</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($referee_name) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Membership No</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($referee_membership_no) . "</td>
+                    </tr>
+                    <tr>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number</td>
+                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($referee_mobile) . "</td>
+                    </tr>
+                </table>
+                ";
+
+            $message = str_replace('[New Member’s]', esc_html($first_name . ' ' . $last_name), $member_email_content);
+            $message = str_replace('[member details]', $member_details, $message);
+            $message = str_replace('[Confirmation Link]', $confirmation_link, $message);
+
+            if (wp_mail('membership@slqsuae.org', $subject, $message)) {
+                //return true; // Email sent successfully
+            } else {
+                // Capture the last error message from PHPMailer
+                global $phpmailer;
+                $error_message = $phpmailer->ErrorInfo;
+            
+                // Send a JSON error response with the error message
+                wp_send_json_error('Cannot send email: ' . $error_message);
+            }
+        }
+
         $membership_number = generate_membership_number($joining_date);
         $password = wp_hash_password('12345');
         
         // Send verification email to referee
-        $verification_link = site_url('/verify-referee?email=' . urlencode($email));
+        $verification_link = site_url('/verify-referee?member_id=' . urlencode($email));
        
         $subject = 'Welcome to SLQS-UAE – Your Membership Registration Update';
         $member_email_content =  file_get_contents( __DIR__ . '/mail/member.txt');
