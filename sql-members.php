@@ -13,8 +13,12 @@ if (!defined('ABSPATH')) {
 
 // Include admin and frontend files
 require_once plugin_dir_path(__FILE__) . 'admin/index.php';
+require_once plugin_dir_path(__FILE__) . 'frontend/login.php';
 require_once plugin_dir_path(__FILE__) . 'frontend/index.php';
 require_once plugin_dir_path(__FILE__) . 'frontend/list.php';
+require_once plugin_dir_path(__FILE__) . 'frontend/detail.php';
+require_once plugin_dir_path(__FILE__) . 'frontend/profile.php';
+require_once plugin_dir_path(__FILE__) . 'frontend/referee.php';
 require_once plugin_dir_path(__FILE__) . 'sql-member-functions.php';
 
 
@@ -76,6 +80,7 @@ function slqs_create_member_tables() {
         referee_name varchar(255) NOT NULL,
         referee_membership_no varchar(100) NOT NULL,
         referee_mobile varchar(15) NOT NULL,
+        pdf_path varchar(255) NOT NULL,
         created_at datetime DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id)
     ) $charset_collate;";
@@ -90,11 +95,27 @@ function slqs_create_member_tables() {
         FOREIGN KEY (member_type_id) REFERENCES $member_type_table_name(id) ON DELETE CASCADE
     ) $charset_collate;";
 
+    // Create member_type table
+    $member_special_info_table_name = $wpdb->prefix . 'slqs_member_special_info';
+    $member_special_info= "CREATE TABLE $member_special_info_table_name (
+        id mediumint(9) NOT NULL AUTO_INCREMENT,
+        member_id mediumint(9) NOT NULL,
+        member_type_id mediumint(9) NOT NULL,
+        academic_qualifications TEXT DEFAULT NULL,
+        professional_qualifications TEXT DEFAULT NULL,
+        bio TEXT DEFAULT NULL,
+        created_at datetime DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        FOREIGN KEY (member_id) REFERENCES {$wpdb->prefix}members(id) ON DELETE CASCADE,
+        FOREIGN KEY (member_type_id) REFERENCES {$wpdb->prefix}member_type(id) ON DELETE CASCADE
+    ) $charset_collate;";
+
     require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
     dbDelta($sql_location);
     dbDelta($sql_member_type);
     dbDelta($sql_members);
     dbDelta($sql_member_member_type);
+    dbDelta($member_special_info);
 }
 
 register_activation_hook(__FILE__, 'slqs_create_member_tables');

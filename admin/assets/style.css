@@ -1,3 +1,6 @@
 .member-list{
     margin: auto 20px;
 }
+#exportExcel {
+    padding: 10px;
+}

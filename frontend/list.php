@@ -9,7 +9,7 @@ function slqs_list() {
     ob_start();
     ?>
     <div class="search-box">
-        <input type="text" placeholder="search value 3 text above...">
+        <input type="text" id="searchInput" placeholder="search value 3 text above...">
     </div>
     <div id="memberList" class="row">
         <?php slqs_display_members(1); // Display the first page by default ?>
@@ -35,31 +35,74 @@ function slqs_list() {
     return ob_get_clean();
 }
 
-function slqs_display_members($page) {
+add_action('wp_ajax_load_members', 'load_members');
+add_action('wp_ajax_nopriv_load_members', 'load_members');
+
+function load_members() {
+    global $wpdb;
+
+    // Get the keyword and page number from the AJAX request
+    $keyword = isset($_POST['keyword']) ? sanitize_text_field($_POST['keyword']) : '';
+    $page = isset($_POST['page']) ? intval($_POST['page']) : 1; // Get the page number, default to 1
+
+    // Call the slqs_display_members function with the page and search keyword
+    slqs_display_members($page, $keyword);
+
+    wp_die(); // This is required to terminate immediately and return a proper response
+}
+
+function slqs_display_members($page, $search = '') {
     global $wpdb;
     $members_per_page = 12;
-    $total_members = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}slqs_members");
-    $total_pages = ceil($total_members / $members_per_page);
-    $start = ($page - 1) * $members_per_page;
-    
-    $members = $wpdb->get_results("
-        SELECT 
-            DISTINCT m.*, 
-            u.user_login, 
+
+    // Prepare the base query
+  $base_query = "
+        SELECT
+            DISTINCT m.*,
+            u.user_login,
             u.user_email,
             GROUP_CONCAT(t.type_name) AS type_names
-        FROM 
+        FROM
             {$wpdb->prefix}slqs_members AS m
-        LEFT JOIN 
+        LEFT JOIN
             {$wpdb->prefix}users AS u ON m.user_id = u.ID
-        LEFT JOIN 
+        LEFT JOIN
             {$wpdb->prefix}slqs_member_group AS g ON m.id = g.member_id
-        LEFT JOIN 
+        LEFT JOIN
             {$wpdb->prefix}slqs_member_type AS t ON g.member_type_id = t.id
-        GROUP BY 
-            m.id
-        LIMIT $start, $members_per_page
-    ");
+    ";
+
+    // If a search term is provided, modify the query to include a WHERE clause
+    if (!empty($search)) {
+        $base_query .= $wpdb->prepare(" WHERE  m.status='APPROVED' and (m.first_name LIKE %s OR m.last_name LIKE %s OR u.user_email LIKE %s OR u.user_login LIKE %s)",
+            '%' . $wpdb->esc_like($search) . '%',
+            '%' . $wpdb->esc_like($search) . '%',
+            '%' . $wpdb->esc_like($search) . '%',
+            '%' . $wpdb->esc_like($search) . '%'
+        );
+    } else {
+      $base_query .= $wpdb->prepare(" WHERE  m.status='APPROVED' ");
+    }
+
+    // Get the total number of members after applying the search filter
+
+    if (!empty($search)) {
+      $total_members = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}slqs_members AS m" .
+      (!empty($search) ? " WHERE m.status='APPROVED' and ( m.first_name LIKE '%" . esc_sql($search) . "%' OR m.last_name LIKE '%" . esc_sql($search) . "%' OR u.user_email LIKE '%" . esc_sql($search) . "%' OR u.user_login LIKE '%" . esc_sql($search) . "%'" : ")"));
+    //  echo $base_query;
+          $total_pages = ceil($total_members / $members_per_page);
+          $start = ($page - 1) * $members_per_page;
+    } else {
+      $total_members = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}slqs_members AS m" .
+       " WHERE m.status='APPROVED' ");
+      //echo $base_query;
+          $total_pages = ceil($total_members / $members_per_page);
+          $start = ($page - 1) * $members_per_page;
+    }
+
+    // Add LIMIT clause to the base query
+    $base_query .= " GROUP BY m.id LIMIT %d, %d";
+    $members = $wpdb->get_results($wpdb->prepare($base_query, $start, $members_per_page));
 
     // Display members
     foreach ($members as $index => $member) {
@@ -68,13 +111,13 @@ function slqs_display_members($page) {
         <div class="col-xl-4 col-sm-6">
             <div class="list-col">
                 <div class="cover-img">
-                    <img src="http://localhost/wordpress/wp-content/uploads/2023/09/FB-2.jpeg" alt="">
+                    <img src="https://slqsuae.org/temp/wp-content/uploads/2023/09/FB-2.jpeg" alt="">
                 </div>
                 <div class="avatar-img">
                     <img src="<?php echo $profile_photo; ?>" alt="" >
                 </div>
                 <div class="member-name">
-                    <a href="#"><?php echo esc_html($member->first_name.' '.$member->last_name); ?></a>
+                    <a href="<?php echo esc_url(home_url('/member-detail/?member_id=' . $member->id)); ?>"><?php echo esc_html($member->first_name.' '.$member->last_name); ?></a>
                 </div>
             </div>
         </div>
@@ -87,7 +130,7 @@ function slqs_display_members($page) {
         </div>
     </div>
     <?php
-    // Generate pagination 
+    // Generate pagination
     echo '<div class="container">';
     echo '<div class="col-lg-12">';
     echo '<ul class="pagination pagination-rounded justify-content-center mt-3 mb-4 pb-1" id="pagination">';

@@ -64,7 +64,7 @@ $member = get_member_by_id( $member_id );
             </tr>
             <tr>
                 <th scope="row"><label>E-mail Address (Alternative)</label></th>
-                <td><input type="email" class="regular-text" required name="email_alternative" value="<?php echo esc_attr( $member->email_alternative ); ?>"/></td>
+                <td><input type="email" class="regular-text" name="email_alternative" value="<?php echo esc_attr( $member->email_alternative ); ?>"/></td>
             </tr>
             <tr>
                 <th scope="row"><label>Joining Date for the 1st Job in UAE</label></th>

@@ -1,4 +1,5 @@
 jQuery(document).ready(function($) {
+    alert(0)
     $('#example').DataTable({
         ajax: {
             url: ajaxurl, // WordPress AJAX URL
@@ -25,11 +26,10 @@ jQuery(document).ready(function($) {
                 data: null,
                 render: function(data, type, row) {
                     console.log(row)
-                    if(row.status == "approved"){
-                        console.log('row.status', row.status)
-                        return '<p>' + row.status + '</p>';
+                    if(row.status == "REVIEW"){
+                        return '<a href="' + row.approve_link + '"> Approve </a>';
                     } else {
-                        return '<a href="' + row.approve_link + '">Approve</a>';
+                        return '<p>' + row.status + '</p>';
                     }
                 }
             },

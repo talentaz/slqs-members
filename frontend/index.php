@@ -29,7 +29,7 @@ function generate_membership_number($joining_date) {
     global $wpdb;
     // Convert joining date to DateTime object
     $date = DateTime::createFromFormat('Y-m-d', $joining_date);
-    
+
     if (!$date) {
         return "Invalid date format.";
     }
@@ -40,13 +40,13 @@ function generate_membership_number($joining_date) {
     $day_of_year = calculate_ytd($date); // Day of the year
 
     // Determine decade
-    $decade_digit = determine_decade($year); 
+    $decade_digit = determine_decade($year);
 
     // Format YTD to 3 digits
     $ytd_formatted = str_pad($day_of_year, 3, '0', STR_PAD_LEFT); // Pad with zeros
 
     $last_number = 1; // Start with the last number as 1
-    $membership_number = sprintf("%d%s%s%d", $decade_digit, $year, $ytd_formatted, $last_number);
+    $membership_number = sprintf("%d%s%s%d", $decade_digit, $year_short, $ytd_formatted, $last_number);
 
     // Check if the membership number already exists
     $existing_member = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}users WHERE user_login = %s", $membership_number));
@@ -55,7 +55,7 @@ function generate_membership_number($joining_date) {
         // Increment the last number
         $last_number++;
         // Generate a new membership number
-        $membership_number = sprintf("%d%s%s%d", $decade_digit, $year, $ytd_formatted, $last_number);
+        $membership_number = sprintf("%d%s%s%d", $decade_digit, $year_short, $ytd_formatted, $last_number);
         // Check again if this new membership number exists
         $existing_member = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}users WHERE user_login = %s", $membership_number));
     }
@@ -67,45 +67,55 @@ function generate_membership_number($joining_date) {
 function slqs_registration_form() {
     ob_start();
     ?>
-    <form class="custom-validation" id="slqs-registration-form" method="post" enctype="multipart/form-data">
+    <style>
+
+    /* Make the asterisk (*) red */
+    .highlight1 {
+      color: #bf3319;
+      font-weight: bold;/* A vibrant gold */
+      font-size: 20px;
+    }
+</style>
+    <form class="custom-validation" id="slqs-registration-form" method="post" enctype="multipart/form-data" onsubmit="return validateInput()">
         <input type="hidden" name="slqs_register" value="1">
-         <h5>Applicant Information</h5>
+         <h5>Applicant Information </h5> <br> <p> <span class="highlight1">* </span>You must fill in all required fields to submit this form.</p>
+
          <div class="row">
             <div class="col-lg-6">
                 <div class="mb-3">
-                    <label class="form-label">First name *</label>
+                    <label class="form-label">First name <span class="highlight1">*</span></label>
                     <input type="text" class="form-control" required name="first_name"/>
                 </div>
             </div>
             <div class="col-lg-6">
                 <div class="mb-3">
-                     <label class="form-label">Last name *</label>
+                     <label class="form-label">Last name <span class="highlight1">*</span></label>
                     <input type="text" class="form-control" required name="last_name"/>
                 </div>
             </div>
         </div>
         <div class="mb-3">
-            <label>Date of Birth *</label>
-            <input type="date" class="form-control" required name="date_of_birth">
+            <label class="">Date of Birth <span class="highlight1">*</span></label>
+            <input type="date" class="form-control" min="1900-01-01" max="9999-12-31" required name="date_of_birth">
         </div>
         <div class="mb-3">
-            <label>Emirate of Residence in UAE *</label>
+            <label >Emirate of Residence in UAE <span class="highlight1">*</span></label>
             <?php echo slqs_get_emirates_dropdown("emirate_of_location"); ?>
         </div>
         <div class="mb-3">
-            <label class="form-label">Current Address in UAE *</label>
+            <label class="form-label ">Current Address in UAE <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="current_address"/>
         </div>
         <div class="mb-3">
-            <label for="input-mask" class="form-label">Mobile Number * (Primary) +971-XXX-XXX-XXX</label>
-            <input class="form-control input-mask" required data-inputmask="'mask': '+(999)-999-999-999'" name="mobile_primary" value="+971"/>
+            <label for="input-mask" class="form-label ">Mobile Number <span class="highlight1">*</span> (Primary) +971-XXXXXXXXX</label>
+            <input id="ccode1" class="form-control input-mask" required  name="mobile_primary" value="+971-" maxlength="14" placeholder="+971-XXXXXXXXX"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Mobile Number (Alternative) +971-XXX-XXX-XXX</label>
-            <input class="form-control input-mask" data-inputmask="'mask': '+(999)-999-999-999'" name="mobile_alternative" value="+971"/>
+            <label class="form-label">Mobile Number (Alternative) +971-XXXXXXXXX</label>
+            <input id="ccode2" class="form-control input-mask"  name="mobile_alternative" value="+971-" maxlength="14" placeholder="+971-XXXXXXXXX" />
         </div>
         <div class="mb-3">
-            <label class="form-label">E-mail Address * (Primary)</label>
+            <label class="form-label ">E-mail Address <span class="highlight1">*</span> (Primary)</label>
             <input type="email" class="form-control" required name="email"/>
         </div>
         <div class="mb-3">
@@ -113,84 +123,213 @@ function slqs_registration_form() {
             <input type="text" class="form-control" name="email_alternative"/>
         </div>
         <div class="mb-3">
-            <label>Joining Date for the 1st Job in UAE *</label>
-            <input type="date" class="form-control" required name="joining_date">
+            <label >Joining Date for the 1st Job in UAE <span class="highlight1">*</span></label>
+            <input type="date" class="form-control" min="1900-01-01" max="9999-12-31" required name="joining_date">
         </div>
 
         <h5>Employment Information</h5>
         <div class="">
-            <label class="form-label">Current Employer *</label>
+            <label class="form-label ">Current Employer <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="current_employer"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Employer Address *</label>
+            <label class="form-label ">Employer Address <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="employer_address"/>
         </div>
         <div class="mb-3">
-            <label>Emirate of Residence in UAE *</label>
+            <label >Emirate of Residence in UAE <span class="highlight1">*</span></label>
             <?php echo slqs_get_emirates_dropdown("current_work_location"); ?>
         </div>
         <div class="mb-3">
-            <label class="form-label">Company Phone Number * (+971-X-XXX-XXXX)</label>
+            <label class="form-label ">Company Phone Number <span class="highlight1">*</span> (+971-XXXXXXXXX)</label>
             <!-- <input type="text" class="form-control"  required name="company_phone"/> -->
-            <input class="form-control input-mask" data-inputmask="'mask': '+(999)-9-999-9999'" required name="company_phone" value="+971"/>
+            <input id="ccode3" class="form-control input-mask"  required name="company_phone" value="+971-" maxlength="14" placeholder="+971-XXXXXXXXX" />
         </div>
         <div class="mb-3">
-            <label class="form-label">Company E-mail Address *</label>
+            <label class="form-label ">Company E-mail Address <span class="highlight1">*</span></label>
             <input type="email" class="form-control" required name="company_email"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Current Position *</label>
+            <label class="form-label">Current Position <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required  name="current_position"/>
         </div>
 
         <h5>Emergency Contact <br> Name and Relationship to Applicant</h5>
         <div class="">
-            <label class="form-label">Name *</label>
+            <label class="form-label ">Name <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="emergency_contact_name"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Relationship to Applicant *</label>
+            <label class="form-label ">Relationship to Applicant <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="emergency_contact_relationship"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Address *</label>
+            <label class="form-label ">Address <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="emergency_contact_address"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Mobile Number * (+971-XXX-XXX-XXX)</label>
-            <input class="form-control input-mask" data-inputmask="'mask': '+(999)-999-999-999'" required name="emergency_contact_mobile" value="+971"/>
+            <label class="form-label ">Mobile Number <span class="highlight1">*</span> (+971-XXXXXXXXX)</label>
+            <input id="ccode4" class="form-control input-mask"  required name="emergency_contact_mobile" value="+971-" maxlength="14" placeholder="+971-XXXXXXXXX"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">E-mail *</label>
+            <label class="form-label ">E-mail <span class="highlight1">*</span></label>
             <input type="email" class="form-control" required name="emergency_contact_email"/>
         </div>
 
         <h5>Referee</h5>
         <div class="mb-3">
-            <label class="form-label">Name of SLQS Member *</label>
+            <label class="form-label ">Name of SLQS Member <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="referee_name"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Membership No *</label>
+            <label class="form-label ">Membership No <span class="highlight1">*</span></label>
             <input type="text" class="form-control" required name="referee_membership_no"/>
         </div>
         <div class="mb-3">
-            <label class="form-label">Mobile Number * (+971-XXX-XXX-XXX)</label>
+            <label  class="form-label ">Mobile Number <span class="highlight1">*</span> (+971-XXXXXXXXX)</label>
             <!-- <input type="text" class="form-control"  required name="referee_mobile"/> -->
-            <input class="form-control input-mask" data-inputmask="'mask': '+(999)-999-999-999'" required name="referee_mobile" value="+971"/>
+            <input id="ccode5" class="form-control input-mask"  required name="referee_mobile" value="+971-" maxlength="14" placeholder="+971-XXXXXXXXX"/>
+            <p id="errorMsg" style="color: red; display: none;">Please enter exactly 9 digits after +971- </p>
         </div>
+        <script>
+        document.getElementById("ccode1").addEventListener("input", function (event) {
+            let input = event.target;
+            let fixedPrefix = "+971-"; // Fixed starting value
+
+            // Ensure input always starts with "+123"
+            if (!input.value.startsWith(fixedPrefix)) {
+                input.value = fixedPrefix + input.value.slice(fixedPrefix.length);
+            }
+
+            // Allow only numbers after "+123"
+            input.value = fixedPrefix + input.value.slice(fixedPrefix.length).replace(/[^0-9]/g, "");
+
+            // Ensure total length does not exceed 12 characters
+            if (input.value.length > 14) {
+                input.value = input.value.slice(0, 14);
+            }
+            registerButton.disabled = input.value.length !== 14;
+        });
+
+        </script>
+        <script>
+        document.getElementById("ccode2").addEventListener("input", function (event) {
+            let input = event.target;
+            let fixedPrefix = "+971-"; // Fixed starting value
+
+            // Ensure input always starts with "+123"
+            if (!input.value.startsWith(fixedPrefix)) {
+                input.value = fixedPrefix + input.value.slice(fixedPrefix.length);
+            }
+
+            // Allow only numbers after "+123"
+            input.value = fixedPrefix + input.value.slice(fixedPrefix.length).replace(/[^0-9]/g, "");
+
+            // Ensure total length does not exceed 12 characters
+            if (input.value.length > 14) {
+                input.value = input.value.slice(0, 14);
+            }
+
+        });
+
+        </script>
+        <script>
+        document.getElementById("ccode3").addEventListener("input", function (event) {
+            let input = event.target;
+            let fixedPrefix = "+971-"; // Fixed starting value
+
+            // Ensure input always starts with "+123"
+            if (!input.value.startsWith(fixedPrefix)) {
+                input.value = fixedPrefix + input.value.slice(fixedPrefix.length);
+            }
+
+            // Allow only numbers after "+123"
+            input.value = fixedPrefix + input.value.slice(fixedPrefix.length).replace(/[^0-9]/g, "");
+
+            // Ensure total length does not exceed 12 characters
+            if (input.value.length > 14) {
+                input.value = input.value.slice(0, 14);
+            }
+            registerButton.disabled = input.value.length !== 14;
+        });
+                // Validate input on form submission
+
+        </script>
+        <script>
+        document.getElementById("ccode4").addEventListener("input", function (event) {
+            let input = event.target;
+            let fixedPrefix = "+971-"; // Fixed starting value
+
+            // Ensure input always starts with "+123"
+            if (!input.value.startsWith(fixedPrefix)) {
+                input.value = fixedPrefix + input.value.slice(fixedPrefix.length);
+            }
+
+            // Allow only numbers after "+123"
+            input.value = fixedPrefix + input.value.slice(fixedPrefix.length).replace(/[^0-9]/g, "");
+
+            // Ensure total length does not exceed 12 characters
+            if (input.value.length > 14) {
+                input.value = input.value.slice(0, 14);
+            }
+            registerButton.disabled = input.value.length !== 14;
+        });
+                // Validate input on form submission
+
+        </script>
+        <script>
+        document.getElementById("ccode5").addEventListener("input", function (event) {
+            let input = event.target;
+            let fixedPrefix = "+971-"; // Fixed starting value
+
+            // Ensure input always starts with "+123"
+            if (!input.value.startsWith(fixedPrefix)) {
+                input.value = fixedPrefix + input.value.slice(fixedPrefix.length);
+            }
+
+            // Allow only numbers after "+123"
+            input.value = fixedPrefix + input.value.slice(fixedPrefix.length).replace(/[^0-9]/g, "");
+
+            // Ensure total length does not exceed 12 characters
+            if (input.value.length > 14) {
+                input.value = input.value.slice(0, 14);
+            }
+            registerButton.disabled = input.value.length !== 14;
+        });
+                // Validate input on form submission
+                function validateInput() {
+                  /*  let input1 = document.getElementById("ccode1").value;
+                    let input3 = document.getElementById("ccode3").value;
+                    let input4 = document.getElementById("ccode4").value;
+                    let input5 = document.getElementById("ccode5").value; */
+
+                    let input1 = document.getElementById("ccode1").value;
+                    let input3 = document.getElementById("ccode3").value;
+                    let input4 = document.getElementById("ccode4").value;
+                    let input5 = document.getElementById("ccode5").value;
+//alert(input1.length);
+                    if (input1.length == 14 && input3.length == 14 && input4.length == 14 && input5.length == 14) {
+                        return true; // Prevent form submission
+                    } else {
+                        alert("Please enter exactly 9 digits after +971-");
+                        return false;
+                      }
+                    }
+
+
+        </script>
         <h5>Declaration</h5>
         <p>I certify that the information and particulars I have given in making this application are true and accurate. I also agree that the Central Committee of Sri Lankan Quantity Surveyors United Arab Emirates (SLQS-UAE) has the full authority to decide on my membership.</p>
         <!-- <input type="file" name="profile_photo" accept="image/*" required> -->
-        
-        
-        <button type="submit" class="btn btn-primary" id="registerButton">Register</button>
-    
+
+
+        <button  type="submit" class="btn btn-primary" id="registerButton" disabled>Register</button>
+
         <!-- Loading Button (initially hidden) -->
         <button class="btn btn-primary" id="loadingButton" disabled style="display:none;">
             <i class="bx bx-loader bx-spin font-size-16 align-middle me-2"></i> Register
         </button>
+        <!-- <a href="<?php echo site_url('/verify-referee?email=' . urlencode('daisadadaser@gmail.com'));?>">123</a> -->
     </form>
     <?php
     return ob_get_clean();
@@ -209,6 +348,9 @@ add_action('wp_ajax_slqs_register', 'slqs_handle_registration');
 add_action('wp_ajax_nopriv_slqs_register', 'slqs_handle_registration');
 // Frontend: Handle form submission
 function slqs_handle_registration() {
+    if (isset($_POST['slqs_edit'])) {
+        echo "213123"; exit;
+    }
     if (isset($_POST['slqs_register'])) {
         global $wpdb;
         // Sanitize and retrieve form data
@@ -246,126 +388,81 @@ function slqs_handle_registration() {
         $company_phone = formatted_mobile($company_phone);
         $emergency_contact_mobile = formatted_mobile($emergency_contact_mobile);
         $referee_mobile = formatted_mobile($referee_mobile);
-        
+
         // Check if email already exists
         $existing_member = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}users WHERE user_email = %s", $email));
         if ($existing_member) {
             wp_send_json_error('Email already exists. Please use a different email.');
         }
 
-        $existing_member_no = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}users WHERE user_login = %s", $referee_membership_no));
+        $existing_member_no = $wpdb->get_row($wpdb->prepare("
+                                SELECT u.*
+                                FROM {$wpdb->prefix}users u
+                                JOIN {$wpdb->prefix}slqs_members m ON u.ID = m.user_id
+                                WHERE u.user_login = %s AND m.status = 'APPROVED'
+                            ", $referee_membership_no));
+        // Send verification email to referee
+        $verification_link = site_url('/verify-referee?email=' . urlencode($email));
         if (!$existing_member_no) {
             wp_send_json_error('Membership number is no exist. Please Choose correct membership number');
         } else {
             $referee_email = $existing_member_no->user_email;
-
             $subject = 'Reference Confirmation for Membership Registration – SLQS-UAE of '.$first_name.' '.$last_name;
             $member_email_content =  file_get_contents( __DIR__ . '/mail/referee.txt');
-            $member_details = "
-                <table style='border-collapse: collapse; width: 100%;'>
-                    <tr>
-                        <th style='border: 1px solid #dddddd; text-align: left; padding: 8px;'>Detail</th>
-                        <th style='border: 1px solid #dddddd; text-align: left; padding: 8px;'>Information</th>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($first_name . ' ' . $last_name) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Birth Date</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($date_of_birth) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Current Address</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($current_address) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number * (Primary)</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($mobile_primary) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number (Alternative)</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($mobile_alternative) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>E-mail Address * (Primary)</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($email) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>E-mail Address (Alternative)</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($email_alternative) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Joining Date for the 1st Job in UAE</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($joining_date) . "</td>
-                    </tr>
-                    <tr>
-                        <td colspan='2' style='border: 1px solid #dddddd; padding: 8px;'>Employment Information</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($current_employer) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Employer Address</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($employer_address) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Company Phone Number</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($company_phone) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Company E-mail Address</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($company_email) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Current Position</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($current_position) . "</td>
-                    </tr>
-                    <tr>
-                        <td colspan='2' style='border: 1px solid #dddddd; padding: 8px;'>Emergency Contact Name and Relationship to Applicant</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_name) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Relationship to Applicant</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_relationship) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Address </td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_address) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_mobile) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>E-mail</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($emergency_contact_email) . "</td>
-                    </tr>
-                    <tr>
-                        <td colspan='2' style='border: 1px solid #dddddd; padding: 8px;'>Referee</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Name of SLQS Member</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($referee_name) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Membership No</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($referee_membership_no) . "</td>
-                    </tr>
-                    <tr>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>Mobile Number</td>
-                        <td style='border: 1px solid #dddddd; padding: 8px;'>" . esc_html($referee_mobile) . "</td>
-                    </tr>
-                </table>
-                ";
-
+            $member_details = sprintf(
+                              "<br>Name: %s<br>
+                              Birth Date: %s<br>
+                              Current Address: %s<br>
+                              Mobile Number: %s<br>
+                              Mobile Number (Alternative): %s<br>
+                              E-mail Address (Primary): %s<br>
+                              E-mail Address (Alternative): %s<br>
+                              Joining Date for the 1st Job in UAE: %s<br>
+                              Employment Information<br>
+                              Name: %s<br>
+                              Employer Address: %s<br>
+                              Company Phone Number: %s<br>
+                              Company E-mail Address: %s<br>
+                              Current Position: %s<br>
+                              Emergency Contact Name and Relationship to Applicant<br>
+                              Name: %s<br>
+                              Relationship to Applicant: %s<br>
+                              Address: %s<br>
+                              Mobile Number: %s<br>
+                              E-mail: %s<br>
+                              Referee<br>
+                              Name of SLQS Member: %s<br>
+                              Membership No: %s<br>
+                              Mobile Number: %s<br>",
+                              esc_html($first_name . ' ' . $last_name),
+                              esc_html($date_of_birth),
+                              esc_html($current_address),
+                              esc_html($mobile_primary),
+                              esc_html($mobile_alternative),
+                              esc_html($email),
+                              esc_html($email_alternative),
+                              esc_html($joining_date),
+                              esc_html($current_employer),
+                              esc_html($employer_address),
+                              esc_html($company_phone),
+                              esc_html($company_email),
+                              esc_html($current_position),
+                              esc_html($emergency_contact_name),
+                              esc_html($emergency_contact_relationship),
+                              esc_html($emergency_contact_address),
+                              esc_html($emergency_contact_mobile),
+                              esc_html($emergency_contact_email),
+                              esc_html($referee_name),
+                              esc_html($referee_membership_no),
+                              esc_html($referee_mobile)
+                          );
             $message = str_replace('[New Member’s]', esc_html($first_name . ' ' . $last_name), $member_email_content);
             $message = str_replace('[member details]', $member_details, $message);
-            $message = str_replace('[Confirmation Link]', $confirmation_link, $message);
+            $message = str_replace('[Confirmation Link]', $verification_link, $message);
+
+            // $message = str_replace('[New Member’s Full Name]', esc_html($first_name . ' ' . $last_name), $member_email_content);
+            // print_r($message);
+            // exit;
 
             if (wp_mail($referee_email, $subject, $message)) {
                 //return true; // Email sent successfully
@@ -373,7 +470,7 @@ function slqs_handle_registration() {
                 // Capture the last error message from PHPMailer
                 global $phpmailer;
                 $error_message = $phpmailer->ErrorInfo;
-            
+
                 // Send a JSON error response with the error message
                 wp_send_json_error('Cannot send email: ' . $error_message);
             }
@@ -381,21 +478,18 @@ function slqs_handle_registration() {
 
         $membership_number = generate_membership_number($joining_date);
         $password = wp_hash_password('12345');
-        
-        // Send verification email to referee
-        $verification_link = site_url('/verify-referee?member_id=' . urlencode($email));
-       
+
         $subject = 'Welcome to SLQS-UAE – Your Membership Registration Update';
         $member_email_content =  file_get_contents( __DIR__ . '/mail/member.txt');
         $message = str_replace('[Member\'s Name]', $first_name.' '.$last_name, $member_email_content);
-        
+
         if (wp_mail($email, $subject, $message)) {
             //return true; // Email sent successfully
         } else {
             // Capture the last error message from PHPMailer
             global $phpmailer;
             $error_message = $phpmailer->ErrorInfo;
-        
+
             // Send a JSON error response with the error message
             wp_send_json_error('Cannot send email: ' . $error_message);
         }
@@ -413,9 +507,9 @@ function slqs_handle_registration() {
         $user_inserted = $wpdb->insert("{$wpdb->prefix}users", $user_data);
         $user_id = 0;
         if ($user_inserted) {
-            $user_id = $wpdb->insert_id; 
+            $user_id = $wpdb->insert_id;
         }
-     
+
         // Handle file upload (uncomment if needed)
         // $profile_photo = $_FILES['profile_photo'];
         // $upload = wp_handle_upload($profile_photo, array('test_form' => false));
@@ -423,8 +517,8 @@ function slqs_handle_registration() {
         //     echo "Error uploading file: " . $upload['error'];
         //     return;
         // }
-        
-         
+
+
         // Insert member data into slqs_members table
         $member_inserted = $wpdb->insert(
                                 "{$wpdb->prefix}slqs_members",
@@ -475,10 +569,20 @@ function slqs_handle_registration() {
                 'member_type_id' => 1
                  )
         );
-     
-       
+
+
         wp_send_json_success(array('message' => 'Thank you!', 'redirect' => home_url('/success')));
     } else {
         wp_send_json_error('Registration failed. Please try again.');
+    }
+}
+
+
+
+add_action('wp_ajax_slqs_cpd', 'slqs_cpd');
+add_action('wp_ajax_nopriv_slqs_cpd', 'slqs_cpd');
+function slqs_cpd() {
+    if (isset($_POST['slqs_cpd_edit'])) {
+        echo "213123"; exit;
     }
 }

@@ -96,6 +96,121 @@ input {
     animation: spinner-border 0.75s linear infinite; /* Replace with your desired animation speed */
 }
 
+/* details page */
+.header-section {
+    background-color: #23201d;
+    border-radius: 6px;
+    border-color: rgba(225, 225, 225, .25);
+    border-style: solid;
+    height: 500px;
+}
+.header-section .cover-img {
+    overflow: hidden;
+    height: 300px;
+}
+.header-section .cover-img img {
+    object-fit: cover;
+}
+.profile-img {
+    position: absolute;
+    width: auto;
+    left: 30px;
+    top: 329px;
+    line-height: 1 !important;
+    border-radius: 100%;
+    -moz-border-radius: 100%;
+    -webkit-border-radius: 100%;
+    max-width: 180px;
+    /* margin: 20px 0; */
+}
+.profile-img img {
+    -webkit-border-radius: 100%;
+    width: 150px;
+    height: 150px !important;
+
+}
+.profile-title {
+    width: 24%;
+    margin: 56px 0 0 180px;
+}
+.profile-title p{
+    margin: 0;
+}
+.member-wrapper{
+    /* min-height: 520px; */
+}
+.member-wrapper .member-description {
+    border-width: 0 0 1px 0;
+    border-color: rgba(225, 225, 225, .25);
+    padding: 1em;
+    border-bottom: 1px solid;
+    display: flex;
+}
+.member-description .member-label {
+    text-transform: uppercase;
+    font-size: 86%;
+    width: 30%;
+    padding-left: 10px;
+    position: relative;
+    float: left;
+}
+.member-description .member-value {
+    width: 68%;
+    margin-left: 2%;
+    color: #969696;
+}
+.nav-pills .nav-link {
+    background: 0 0;
+    color: #000;
+    box-shadow: none;
+}
+/*Profile Pic Start*/
+.picture-container{
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+}
+.picture{
+    width: 100px;
+    height: 100px;
+    color: #FFFFFF;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: all 0.2s;
+    -webkit-transition: all 0.2s;
+    margin: 0 auto;
+}
+.picture:hover{
+    border-color: #2ca8ff;
+}
+.content.ct-wizard-green .picture:hover{
+    border-color: #05ae0e;
+}
+.content.ct-wizard-blue .picture:hover{
+    border-color: #3472f7;
+}
+.content.ct-wizard-orange .picture:hover{
+    border-color: #ff9500;
+}
+.content.ct-wizard-red .picture:hover{
+    border-color: #ff3b30;
+}
+.picture input[type="file"] {
+    cursor: pointer;
+    display: block;
+    height: 100%;
+    left: 0;
+    opacity: 0 !important;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+.picture-src{
+    width: 100%;
+    height: 100px !important;
+    object-fit: cover;
+}
 /* responsive */
 @media only screen and (max-width: 768px) {
     .search-box input {
